@@ -10,6 +10,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AppFrameAndroid">
         <activity
+            android:name="com.zzt.act.NewAct"
+            android:exported="false" />
+        <activity
+            android:name="com.zzt.act.NewProcessAct"
+            android:exported="false"
+            android:process=":zzt_process" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"

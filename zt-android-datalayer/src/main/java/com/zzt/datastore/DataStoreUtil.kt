@@ -4,29 +4,16 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.zzt.zt_android_datalayer.MyApplication
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import java.io.IOException
 
 /**
  * @author: zeting
@@ -35,191 +22,44 @@ import java.io.IOException
  */
 object DataStoreUtil {
     val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
-    val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     // 在 Application 类中定义
     val dataStore: DataStore<Preferences> = MyApplication.context.userDataStore
 
 
     /**
-     * 保存 Int 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveInt(key: Preferences.Key<Int>, value: Int) {
-        dataStore?.edit { preferences ->
-            preferences[key] = value
+     *
+     * 异步获取数据
+     * */
+    fun <Value> getData(key: String, defaultValue: Value): Value {
+        val result = when (defaultValue) {
+            is Int -> readIntData(key, defaultValue)
+            is Float -> readFloatData(key, defaultValue)
+            is Double -> readDoubleData(key, defaultValue)
+            is Boolean -> readBoolean(key, defaultValue)
+            is String -> readString(key, defaultValue)
+            is Long -> readLong(key, defaultValue)
+
+            else -> throw IllegalArgumentException("can not find the $key type")
         }
+
+        return result as Value
     }
 
     /**
-     * 读取 Int 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<Int>
+     * 异步输入数据
      */
-    fun readInt(key: Preferences.Key<Int>, defaultValue: Int = 0): Flow<Int>? = dataStore?.data
-        ?.catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        ?.map { preferences ->
-            preferences[key] ?: defaultValue
-        }
-
-    /**
-     * 保存 Long 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveLong(key: Preferences.Key<Long>, value: Long) {
-        dataStore?.edit { preferences ->
-            preferences[key] = value
+    fun <Value> putData(key: String, value: Value) {
+        when (value) {
+            is Int -> saveIntData(key, value)
+            is Long -> saveLongData(key, value)
+            is Float -> saveFloatData(key, value)
+            is Double -> saveDoubleData(key, value)
+            is Boolean -> saveBoolean(key, value)
+            is String -> saveString(key, value)
+            else -> throw IllegalArgumentException("unSupport $value type !!!")
         }
     }
-
-    /**
-     * 读取 Long 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<Long>
-     */
-    fun readLong(key: Preferences.Key<Long>, defaultValue: Long = 0L): Flow<Long> = dataStore.data
-        .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        .map { preferences ->
-            preferences[key] ?: defaultValue
-        }
-
-    /**
-     * 保存 Float 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveFloat(key: Preferences.Key<Float>, value: Float) {
-        dataStore?.edit { preferences ->
-            preferences[key] = value
-        }
-    }
-
-    /**
-     * 读取 Float 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<Float>
-     */
-    fun readFloat(key: Preferences.Key<Float>, defaultValue: Float = 0f): Flow<Float> =
-        dataStore.data
-            .catch { exception ->
-                if (exception is IOException) {
-                    emit(emptyPreferences())
-                } else {
-                    throw exception
-                }
-            }
-            .map { preferences ->
-                preferences[key] ?: defaultValue
-            }
-
-    /**
-     * 保存 Boolean 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveBoolean(key: Preferences.Key<Boolean>, value: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[key] = value
-        }
-    }
-
-    /**
-     * 读取 Boolean 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<Boolean>
-     */
-    fun readBoolean(key: Preferences.Key<Boolean>, defaultValue: Boolean = false): Flow<Boolean> =
-        dataStore.data
-            .catch { exception ->
-                if (exception is IOException) {
-                    emit(emptyPreferences())
-                } else {
-                    throw exception
-                }
-            }
-            .map { preferences ->
-                preferences[key] ?: defaultValue
-            }
-
-    /**
-     * 保存 String 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveString(key: Preferences.Key<String>, value: String) {
-        dataStore.edit { preferences ->
-            preferences[key] = value
-        }
-    }
-
-    /**
-     * 读取 String 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<String?>
-     */
-    fun readString(key: Preferences.Key<String>, defaultValue: String? = null): Flow<String?> =
-        dataStore.data
-            .catch { exception ->
-                if (exception is IOException) {
-                    emit(emptyPreferences())
-                } else {
-                    throw exception
-                }
-            }
-            .map { preferences ->
-                preferences[key] ?: defaultValue
-            }
-
-    /**
-     * 保存 StringSet 类型的值
-     * @param key 键
-     * @param value 值
-     */
-    suspend fun saveStringSet(key: Preferences.Key<Set<String>>, value: Set<String>) {
-        dataStore.edit { preferences ->
-            preferences[key] = value
-        }
-    }
-
-    /**
-     * 读取 StringSet 类型的值
-     * @param key 键
-     * @param defaultValue 默认值
-     * @return Flow<Set<String>?>
-     */
-    fun readStringSet(
-        key: Preferences.Key<Set<String>>,
-        defaultValue: Set<String>? = null
-    ): Flow<Set<String>?> = dataStore.data
-        .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        .map { preferences ->
-            preferences[key] ?: defaultValue
-        }
 
     /**
      * 移除指定 Key 的值
@@ -238,6 +78,141 @@ object DataStoreUtil {
         dataStore.edit { preferences ->
             preferences.clear()
         }
+    }
+
+    private fun saveString(key: String, value: String) = runBlocking {
+        saveSyncString(key, value)
+    }
+
+    private suspend fun saveSyncString(key: String, value: String) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[stringPreferencesKey(key)] = value
+        }
+    }
+
+    private fun saveBoolean(key: String, value: Boolean) =
+        runBlocking { saveSyncBoolean(key, value) }
+
+    private suspend fun saveSyncBoolean(key: String, value: Boolean) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[booleanPreferencesKey(key)] = value
+        }
+    }
+
+    private fun saveDoubleData(key: String, value: Double) = runBlocking {
+        saveSyncDoubleData(key, value)
+    }
+
+    private suspend fun saveSyncDoubleData(key: String, value: Double) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[doublePreferencesKey(key)] = value
+        }
+    }
+
+    private fun saveFloatData(key: String, value: Float) =
+        runBlocking { saveSyncFloatData(key, value) }
+
+    private suspend fun saveSyncFloatData(key: String, value: Float) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[floatPreferencesKey(key)] = value
+        }
+    }
+
+    private fun saveLongData(key: String, value: Long) =
+        runBlocking { saveSyncLongData(key, value) }
+
+    private suspend fun saveSyncLongData(key: String, value: Long) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[longPreferencesKey(key)] = value
+        }
+    }
+
+    private fun saveIntData(key: String, value: Int) = runBlocking { saveSyncIntData(key, value) }
+
+    private suspend fun saveSyncIntData(key: String, value: Int) {
+        dataStore.edit { mutablePreferences ->
+            mutablePreferences[intPreferencesKey(key)] = value
+        }
+    }
+
+    private fun readIntData(key: String, defaultValue: Int): Int {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[intPreferencesKey(key)] ?: resultValue
+                true
+            }
+        }
+
+        return resultValue
+    }
+
+    private fun readFloatData(key: String, defaultValue: Float): Float {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[floatPreferencesKey(key)] ?: resultValue
+                true
+            }
+        }
+
+        return resultValue
+    }
+
+    private fun readDoubleData(key: String, defaultValue: Double): Double {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[doublePreferencesKey(key)] ?: resultValue
+                true
+            }
+        }
+
+        return resultValue
+    }
+
+    private fun readBoolean(key: String, defaultValue: Boolean): Boolean {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[booleanPreferencesKey(key)] ?: resultValue
+                true
+            }
+        }
+
+        return resultValue
+    }
+
+    private fun readString(key: String, defaultValue: String): String {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[stringPreferencesKey(key)] ?: defaultValue
+
+                true
+            }
+        }
+
+        return resultValue
+    }
+
+    private fun readLong(key: String, defaultValue: Long): Long {
+        var resultValue = defaultValue
+
+        runBlocking {
+            dataStore.data.first {
+                resultValue = it[longPreferencesKey(key)] ?: resultValue
+                true
+            }
+        }
+
+        return resultValue
+
     }
 
 }
