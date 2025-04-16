@@ -1,5 +1,6 @@
 package com.zzt.zt_android_datalayer
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -12,6 +13,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,13 +24,22 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.zzt.act.NewAct
 import com.zzt.act.NewProcessAct
 import com.zzt.zt_android_datalayer.ui.theme.AppFrameAndroidTheme
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 class MainActivity : ComponentActivity() {
     val TAG = MainActivity::class.java.simpleName
+
+    @SuppressLint("CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        Log.d(TAG, "延迟执行 0 " + Thread.currentThread().name)
         setContent {
             AppFrameAndroidTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -35,34 +47,45 @@ class MainActivity : ComponentActivity() {
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
+                    val scope = rememberCoroutineScope()
+                    val context = LocalContext.current
+                    scope.launch {
+                        delay(6000)
+                        Log.d(TAG, "延迟执行 1 " + Thread.currentThread().name)
+
+                        NewAct.start(context)
+                    }
                 }
             }
         }
 
+        // 在后台线程执行一些耗时操作
+        CoroutineScope(Dispatchers.IO).launch {
+            delay(2000) // 模拟耗时操作
+            Log.d(TAG, "延迟执行 2 " + Thread.currentThread().name)
+            withContext(Dispatchers.Main.immediate) {
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-
-                Log.d(TAG, "生命周期监听：Lifecycle.State.CREATED ")
-            }
-        }
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-
-                Log.d(TAG, "生命周期监听：Lifecycle.State.STARTED ")
+                Log.d(TAG, "延迟执行 3 " + Thread.currentThread().name)
             }
         }
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.RESUMED) {
-
-                Log.d(TAG, "生命周期监听：Lifecycle.State.RESUMED ")
+        runBlocking {
+            Log.d(TAG, "延迟执行 4 " + Thread.currentThread().name)
+            launch(Dispatchers.IO + CoroutineName("MyIOCoroutine")) {
+                Log.d(TAG, "延迟执行 5 " + Thread.currentThread().name)
+                delay(1000)
+                Log.d(TAG, "延迟执行 6 " + Thread.currentThread().name)
             }
+            Log.d(TAG, "延迟执行 7 " + Thread.currentThread().name)
         }
-
+        Log.d(
+            TAG,
+            "延迟执行 10 " + Thread.currentThread().name + " <<${android.os.Process.myPid()}>>"
+        )
     }
 }
 
+@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -87,6 +110,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
             Text(text = "新进程 打开")
         }
     }
+
 }
 
 @Preview(showBackground = true)

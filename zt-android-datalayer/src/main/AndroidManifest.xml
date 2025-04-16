@@ -9,13 +9,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppFrameAndroid">
+        <!--<provider
+            android:name="com.zzt.provider.MyContentProvider"
+            android:authorities="com.content.provider"
+            android:enabled="true"
+            android:exported="true" />-->
+
         <activity
             android:name="com.zzt.act.NewAct"
             android:exported="false" />
+
         <activity
             android:name="com.zzt.act.NewProcessAct"
             android:exported="false"
             android:process=":zzt_process" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -27,6 +35,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--********************Echat start*********************-->
+        <receiver
+            android:name="com.zzt.recevier.EChatLocalMessageRecevier"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.echatsoft.echatsdk.action.SDK_LOCAL_MSG_NEW_MSG" />
+                <action android:name="com.echatsoft.echatsdk.action.SDK_UNREAD_CHANGE" />
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="com.echatsoft.echatsdk.STOP_BOOT_SERVICE_FROM_UI"
+            android:value="true" />
+
+        <!--  主动隐藏常驻通知显示 改用其他逻辑  -->
+        <meta-data
+            android:name="com.echatsoft.echatsdk.hide.notification"
+            android:value="true" />
+
+        <!--********************Echat End*********************-->
     </application>
 
 </manifest>

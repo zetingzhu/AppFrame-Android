@@ -67,4 +67,12 @@ dependencies {
     implementation("androidx.datastore:datastore-preferences-core:1.1.4")
 //    implementation("androidx.datastore:datastore-core:1.1.4")
     implementation("com.google.code.gson:gson:2.8.8")
+
+
+    // 一洽
+    implementation(libs.echatCore)
+    implementation(libs.echatconnection)
+    implementation(libs.echatSdk)
+    // 此处添加Android14适配 (Androidx/AndroidSupport都添加这个不区分groupId)
+    implementation(libs.echatandroid14)
 }

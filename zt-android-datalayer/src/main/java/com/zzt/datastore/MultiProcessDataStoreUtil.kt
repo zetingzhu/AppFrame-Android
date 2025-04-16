@@ -1,29 +1,24 @@
 package com.zzt.datastore
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.MultiProcessDataStoreFactory
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.zzt.zt_android_datalayer.MyApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import androidx.datastore.dataStoreFile
 
 /**
  * @author: zeting
  * @date: 2025/4/8
  * 多个进程可以交互的数据存储
  */
-
 object MultiProcessDataStoreUtil {
+    val TAG = "MultiProcessDataStoreUtil"
 
     // 创建多进程数据存储实例
     val Context.multiProcessDataStore by lazy {
@@ -37,10 +32,8 @@ object MultiProcessDataStoreUtil {
         )
     }
 
-
     // 在 Application 类中定义
-    val multiDataStore = MyApplication.context.multiProcessDataStore
-
+    var multiDataStore = MyApplication.context.multiProcessDataStore
 
     fun putData(count: Int?) = runBlocking {
         if (count != null) {
@@ -48,13 +41,13 @@ object MultiProcessDataStoreUtil {
             multiDataStore.updateData { currentObj ->
                 obj
             }
+            Log.e(TAG, "LifecycleActivity DataStore count:$count")
         }
     }
 
-
     fun getData(): Int? = runBlocking {
-        val obj = multiDataStore.data.first()
-        obj.mCount
+        val obj = multiDataStore?.data?.first()
+        obj?.mCount
     }
 
 }

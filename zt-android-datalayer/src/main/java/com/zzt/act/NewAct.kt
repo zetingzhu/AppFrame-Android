@@ -45,11 +45,6 @@ class NewAct : AppCompatActivity() {
 
         initView()
 
-        val dataCount = MultiProcessDataStoreUtil.getData()
-        if (dataCount != null) {
-            MultiProcessDataStoreUtil.putData(dataCount + 1)
-        }
-
         getDataCount()
 
         addDataStore()
